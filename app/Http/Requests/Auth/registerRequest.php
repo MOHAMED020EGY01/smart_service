@@ -25,7 +25,7 @@ class registerRequest extends FormRequest
     {
         return [
             "name" => ["required", "string", "max:255"],
-            "email" => ["required", "email", "unique:users"],
+            "email" => ["required", "email","regex:/^[a-zA-Z0-9._%+-]+@stm\.com$/i", "unique:users"],
             "password" => ["required", "min:8"],
             "role" => ["required", "string", Rule::in(array_keys(User::ROLE))],
         ];
