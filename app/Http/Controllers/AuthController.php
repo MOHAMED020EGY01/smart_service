@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Socialite\Socialite;
 
@@ -76,10 +77,37 @@ class AuthController extends Controller
         ], 401);
     }
 
+    public function google(Request $request)
+    {
+        $request->validate([
+            'email' => ['required', 'email'],
+            'name' => ['required', 'string', 'max:255'],
+            'role' => ['required', 'string', Rule::in(array_keys(User::ROLE))],
+        ]);
+        $user = User::firstOrCreate(
+            ['email' => $request->email],
+            [
+                'name' => $request->name,
+                'password' => Hash::make(Str::random(16)),
+                'role' => $request->role,
+            ]
+        );
+        $token = $user->createToken('auth_token')->plainTextToken;
+        return response()->json([
+            'status' => true,
+            'message' => 'Login successful',
+            'data' => [
+                'user' => UserResource::make($user),
+                'access_token' => $token,
+                'token_type' => 'Bearer',
+            ]
+        ]);
+    }
+
     public function logout()
     {
         $user = Auth::guard('sanctum')->user();
-        if($user){
+        if ($user) {
             $user->currentAccessToken()->delete();
             return response()->json([
                 'status' => true,

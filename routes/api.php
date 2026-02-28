@@ -16,6 +16,7 @@ Route::group(
     function () {
         Route::post("/register", [AuthController::class, "register"]);
         Route::post("/login", [AuthController::class, "login"]);
+        Route::post("/google", [AuthController::class, "google"]);
     }
 );
 
@@ -26,5 +27,6 @@ Route::group(
     ],
     function () {
         Route::get('getUser', [AuthController::class, 'getUser']);
-        Route::delete('logout', [AuthController::class,'logout']);
-    });
+        Route::delete('logout', [AuthController::class, 'logout']);
+    }
+);
