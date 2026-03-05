@@ -18,6 +18,10 @@ return new class extends Migration
             $table->string('address_in_details')->nullable();
             $table->timestamps();
         });
+
+        Schema::table('users', function (Blueprint $table) {
+            $table->foreignId('location_id')->after('role')->nullable()->constrained('locations')->nullOnDelete();
+        });
     }
 
     /**

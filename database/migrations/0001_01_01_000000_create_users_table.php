@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('location_id')->nullable()->constrained('locations')->nullOnDelete();
             $table->string('name');
             $table->enum('role', ['user', 'provider'])->default('user');
             $table->string('email')->unique();
