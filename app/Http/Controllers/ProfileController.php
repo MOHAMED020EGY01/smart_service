@@ -43,7 +43,7 @@ public function update(ProfileUpdateRequest $request)
     return response()->json([
         "message" => "Profile updated successfully",
         "data" => [
-            "profile" => UserResource::make(),
+            "profile" => UserResource::make($user),
         ]
     ]);
 }
