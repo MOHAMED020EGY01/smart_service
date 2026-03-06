@@ -11,40 +11,47 @@ class ProfileController extends Controller
 {
     public function profile()
     {
-        $user = request()->user()->load('location');
+        $user = request()->user()->load(["location","orders"]);
+
+
         return response()->json([
             "message" => "This is the profile page",
             "data" => [
-                "user"=> UserResource::make($user),
-                "Categories"=>User::CATEGORY,
+                "user" => UserResource::make($user),
+                "Categories" => User::CATEGORY,
             ],
         ]);
     }
-public function update(ProfileUpdateRequest $request)
-{
-    $user = $request->user()->load('location');
+    public function update(ProfileUpdateRequest $request)
+    {
+        $user = $request->user()->load(["location"]);
 
-    $location = Location::updateOrCreate(
-        ["id" => $user->location_id],
-        [
-            "city" => $request->city,
-            "street" => $request->street,
-            "address_in_details" => $request->address_in_details,
-        ]
-    );
-    $user->update([
-        "location_id" => $location->id,
-        "name" => $request->name,
-        "phone" => $request->phone,
-        "Category" => $request->Category,
-        "Expert" => $request->Expert,
-    ]);
+        $location = Location::updateOrCreate(
+            ["id" => $user->location_id],
+            [
+                "city" => $request->city,
+                "street" => $request->street,
+                "address_in_details" => $request->address_in_details,
+            ]
+        );
+        $user->update([
+            "location_id" => $location->id,
+            "name" => $request->name,
+            "phone" => $request->phone,
+        ]);
 
-    return response()->json([
-        "message" => "Profile updated successfully",
-        "data" => [
-            "profile" => UserResource::make($user),
-        ]
-    ]);
-}
+        if ($user->role == "provider") {
+            $user->update([
+                "Category" => $request->Category,
+                "Expert" => $request->Expert,
+            ]);
+        }
+
+        return response()->json([
+            "message" => "Profile updated successfully",
+            "data" => [
+                "profile" => UserResource::make($user),
+            ]
+        ]);
+    }
 }

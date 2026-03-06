@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -59,5 +58,23 @@ class User extends Authenticatable
     public function location()
     {
         return $this->belongsTo(Location::class, 'location_id');
+    }
+
+    public function UserOrders()
+    {
+        return $this->hasMany(Order::class, 'user_id', 'id');
+    }
+
+    public function ProviderOrders()
+    {
+        return $this->hasMany(Order::class, 'provider_id', 'id');
+    }
+
+    public function orders()
+    {
+        if ($this->role === 'provider') {
+            return $this->ProviderOrders();
+        }
+        return $this->UserOrders();
     }
 }

@@ -22,6 +22,11 @@ class UserResource extends JsonResource
             "phone"=> $this->phone ?? null,
             "Category"=> $this->Category ?? null,
             "Expert"=> $this->Expert ?? null,
+            "rating"=> $this->rating ?? null,
+            "statistics" => $this->orders ? [
+                "totalNumberOfOrders" => $this->orders->count(),
+                "completedNumberOfOrders" => $this->orders->where('status', 'completed')->count(),
+            ] : null,
             "location"=> $this->location ? [
                 "id"=> $this->location->id,
                 "city"=> $this->location->city,
