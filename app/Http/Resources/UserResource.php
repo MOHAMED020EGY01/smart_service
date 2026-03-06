@@ -7,35 +7,42 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
+        $rating = null;
+        if ($this->role == "provider") {
+            $this->loadMissing(['location', 'orders', 'rating']);
+            $rating = [
+                "rate" => $this->rating,
+                "count" => $this->rating->count(),
+            ];
+        } else {
+            $this->loadMissing(['location', 'orders']);
+        }
+
         return [
-            "id"=> $this->id ?? null,
-            "name"=> $this->name ?? null,
-            "email"=> $this->email ?? null,
-            "role"=> $this->role ?? null,
-            "phone"=> $this->phone ?? null,
-            "Category"=> $this->Category ?? null,
-            "Expert"=> $this->Expert ?? null,
-            "rating"=> $this->rating ?? null,
+            "id" => $this->id ?? null,
+            "name" => $this->name ?? null,
+            "email" => $this->email ?? null,
+            "role" => $this->role ?? null,
+            "phone" => $this->phone ?? null,
+            "category" => $this->Category ?? null,
+            "experiences" => $this->Expert ?? null,
+
+            "rating" => $rating,
+
             "statistics" => $this->orders ? [
                 "totalNumberOfOrders" => $this->orders->count(),
-                "completedNumberOfOrders" => $this->orders->where('status', 'completed')->count(),
+                "finishedOrders" => $this->orders->where('status', 'completed')->count(),
             ] : null,
-            "location"=> $this->location ? [
-                "id"=> $this->location->id,
-                "city"=> $this->location->city,
-                "street"=> $this->location->street,
-                "address_in_details"=> $this->location->address_in_details,
-            ] : null,
-            "created_at"=> $this->created_at ?? null,
-            "updated_at"=> $this->updated_at ?? null,
 
+            "address" => $this->location ? [
+                "id" => $this->location->id ?? null,
+                "city" => $this->location->city ?? null,
+                "street" => $this->location->street ?? null,
+                "address_in_details" => $this->location->address_in_details ?? null,
+            ] : null,
+            "createdSince" => $this->created_at?->diffForHumans() ?? null,
         ];
     }
 }

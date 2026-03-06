@@ -23,8 +23,8 @@ class User extends Authenticatable
         'role',
         'location_id',
         'phone',
-        'Category',
-        'Expert',
+        'category',
+        'experiences',
     ];
     public const ROLE = [
         'user' => 'User',
@@ -76,5 +76,10 @@ class User extends Authenticatable
             return $this->ProviderOrders();
         }
         return $this->UserOrders();
+    }
+
+    public function rating()
+    {
+        return $this->hasMany(Rating::class, 'provider_id', 'id');
     }
 }

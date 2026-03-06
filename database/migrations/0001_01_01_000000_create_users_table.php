@@ -18,9 +18,8 @@ return new class extends Migration {
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('phone')->nullable();
-            $table->string('Category')->nullable();
-            $table->string('Expert')->nullable();
-            $table->tinyInteger('rating')->unsigned()->default(0);
+            $table->string('category')->nullable();
+            $table->string('experiences')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

@@ -11,7 +11,7 @@ class ProfileController extends Controller
 {
     public function profile()
     {
-        $user = request()->user()->load(["location","orders"]);
+        $user = request()->user();
 
 
         return response()->json([
@@ -24,18 +24,21 @@ class ProfileController extends Controller
     }
     public function update(ProfileUpdateRequest $request)
     {
-        $user = $request->user()->load(["location"]);
+        $user = $request->user();
 
-        $location = Location::updateOrCreate(
-            ["id" => $user->location_id],
-            [
-                "city" => $request->city,
-                "street" => $request->street,
-                "address_in_details" => $request->address_in_details,
-            ]
-        );
+        $location = null;
+        if ($request->has('city') || $request->has('street') || $request->has('address_in_details')) {
+            $location = Location::updateOrCreate(
+                ["id" => $user->location_id],
+                [
+                    "city" => $request->city,
+                    "street" => $request->street,
+                    "address_in_details" => $request->address_in_details,
+                ]
+            );
+        }
         $user->update([
-            "location_id" => $location->id,
+            "location_id" => $location?->id,
             "name" => $request->name,
             "phone" => $request->phone,
         ]);
