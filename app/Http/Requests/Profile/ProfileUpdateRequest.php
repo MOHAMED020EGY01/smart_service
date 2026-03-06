@@ -24,8 +24,8 @@ class ProfileUpdateRequest extends FormRequest
         return [
             "name"      => ["nullable","string","max:255"],
             "phone"     => ["nullable","numeric"],
-            "Category"  => ["nullable","string","max:255"],
-            "Expert"    => ["nullable","string","max:255"],
+            "category"  => ["nullable","string","max:255"],
+            "experiences"    => ["nullable","string","max:255"],
 
             "city"              => ["nullable","string","max:255"],
             "street"            => ["nullable","string","max:255"],
