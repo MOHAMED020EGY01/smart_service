@@ -17,7 +17,7 @@ class ProviderController extends Controller
             [
                 "message" => "List of providers",
                 "data" => [
-                    "providers" => UserResourceCollection::collection($providers),
+                    "providers" => new UserResourceCollection($providers),
                 ]
             ],
             200
