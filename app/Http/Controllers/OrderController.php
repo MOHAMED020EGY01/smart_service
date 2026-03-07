@@ -10,7 +10,7 @@ class OrderController extends Controller
 {
     public function create(string $id)
     {
-        $provider = User::find($id);
+        $provider = User::where('id', $id)->isProvider()->first();
         if (!$provider) {
             return response()->json([
                 "status" => "error",

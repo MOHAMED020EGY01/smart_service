@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProviderController;
 use Illuminate\Support\Facades\Route;
 
 Route::get("/", function () {
@@ -32,5 +34,9 @@ Route::group(
 
         Route::get('getUser', [AuthController::class, 'getUser']);
         Route::delete('logout', [AuthController::class, 'logout']);
+
+        Route::get('providers', [ProviderController::class, 'index']);
+        Route::get('provider/{id}', [ProviderController::class, 'show']);
+        Route::post('order/{id}', [OrderController::class, 'create']);
     }
 );

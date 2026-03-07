@@ -10,15 +10,15 @@ class UserResource extends JsonResource
     public function toArray(Request $request): array
     {
         $rating = null;
-        $this->loadMissing(['location', 'orders']);
+        $this->loadMissing(['location', 'ProviderOrders','UserOrders']);
         if ($this->role == "provider") {
             $rate = 0;
-            foreach ($this->orders as $order) {
+            foreach ($this->ProviderOrders as $order) {
                 $rate += $order->rating;
             }
             $rating = [
-                "rate" => round($rate / ($this->orders->count() ?: 1), 2),
-                "count" => $this->orders->count(),
+                "rate" => round($rate / ($this->ProviderOrders->count() ?: 1), 2),
+                "count" => $this->ProviderOrders->count(),
             ];
         }
 
