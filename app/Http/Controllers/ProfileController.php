@@ -6,13 +6,13 @@ use App\Http\Requests\Profile\ProfileUpdateRequest;
 use App\Http\Resources\UserResource;
 use App\Models\Location;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class ProfileController extends Controller
 {
     public function profile()
     {
-        $user = request()->user();
-
+        $user = Auth::user();
 
         return response()->json([
             "message" => "This is the profile page",
@@ -24,8 +24,7 @@ class ProfileController extends Controller
     }
     public function update(ProfileUpdateRequest $request)
     {
-        $user = $request->user();
-
+        $user = Auth::user();
         $location = null;
         if ($request->has('city') || $request->has('street') || $request->has('address_in_details')) {
             $location = Location::updateOrCreate(

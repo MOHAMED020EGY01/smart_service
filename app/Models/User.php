@@ -78,8 +78,4 @@ class User extends Authenticatable
         return $this->UserOrders();
     }
 
-    public function rating()
-    {
-        return $this->hasMany(Rating::class, 'provider_id', 'id');
-    }
 }
