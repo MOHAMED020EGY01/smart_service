@@ -12,13 +12,9 @@ class UserResource extends JsonResource
         $rating = null;
         $this->loadMissing(['location', 'ProviderOrders','UserOrders']);
         if ($this->role == "provider") {
-            $rate = 0;
-            foreach ($this->ProviderOrders as $order) {
-                $rate += $order->rating;
-            }
             $rating = [
-                "rate" => round($rate / ($this->ProviderOrders->count() ?: 1), 2),
-                "count" => $this->ProviderOrders->count(),
+                "rate" => round($this->rate, 2),
+                "count" => $this->orders->count(),
             ];
         }
 
@@ -28,8 +24,8 @@ class UserResource extends JsonResource
             "email" => $this->email ?? null,
             "role" => $this->role ?? null,
             "phone" => $this->phone ?? null,
-            "category" => $this->Category ?? null,
-            "experiences" => $this->Expert ?? null,
+            "category" => $this->category ?? null,
+            "experiences" => $this->experiences ?? null,
 
             "rating" => $rating,
 

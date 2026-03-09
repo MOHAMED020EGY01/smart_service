@@ -13,7 +13,11 @@ class Order extends Model
         'status',
     ];
     //** Get the user that owns the order.
-
+    public const STATUS = [
+        'active' => 'Active',
+        'completed' => 'Completed',
+        'cancelled' => 'Cancelled',
+    ];
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');

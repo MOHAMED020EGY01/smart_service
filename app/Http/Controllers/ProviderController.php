@@ -12,7 +12,7 @@ class ProviderController extends Controller
     public function index()
     {
         $this->checkAuth();
-        $providers = User::isProvider()->get();
+        $providers = User::isProvider()->with(['ProviderOrders','UserOrders'])->get();
         return response()->json(
             [
                 "message" => "List of providers",

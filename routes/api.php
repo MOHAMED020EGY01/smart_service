@@ -37,6 +37,9 @@ Route::group(
 
         Route::get('providers', [ProviderController::class, 'index']);
         Route::get('provider/{id}', [ProviderController::class, 'show']);
-        Route::post('order/{id}', [OrderController::class, 'create']);
+
+        Route::post('order/store/{id}', [OrderController::class, 'store']);
+        Route::put('order/update-status/{order}', [OrderController::class, 'updateStatus']);
+        Route::post('order/rate/{provider}/{order}', [OrderController::class, 'rate']);
     }
 );

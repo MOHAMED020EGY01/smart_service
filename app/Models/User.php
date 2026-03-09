@@ -23,6 +23,7 @@ class User extends Authenticatable
         'role',
         'location_id',
         'phone',
+        'rate',
         'category',
         'experiences',
     ];
@@ -51,7 +52,7 @@ class User extends Authenticatable
     //* Scopes that should be cast to native types.
     public function scopeIsProvider($query)
     {
-        return $query->where('role', self::ROLE['provider']);
+        return $query->where('role', 'provider');
     }
 
 

@@ -18,7 +18,7 @@ class ProfileController extends Controller
             "message" => "This is the profile page",
             "data" => [
                 "user" => UserResource::make($user),
-                "Categories" => User::CATEGORY,
+                "categories" => User::CATEGORY,
             ],
         ]);
     }
@@ -44,8 +44,8 @@ class ProfileController extends Controller
 
         if ($user->role == "provider") {
             $user->update([
-                "Category" => $request->Category,
-                "Expert" => $request->Expert,
+                "category" => $request->category,
+                "experiences" => $request->experiences,
             ]);
         }
 
@@ -54,6 +54,6 @@ class ProfileController extends Controller
             "data" => [
                 "profile" => UserResource::make($user),
             ]
-        ]);
+        ],200);
     }
 }
