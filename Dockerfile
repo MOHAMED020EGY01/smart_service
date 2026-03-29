@@ -1,20 +1,13 @@
 FROM php:8.2-apache
 
-RUN docker-php-ext-install pdo pdo_mysql
+# تثبيت الإضافات المطلوبة (مثال)
+RUN docker-php-ext-install mysqli pdo pdo_mysql
 
-RUN a2enmod rewrite
+# إصلاح مشكلة MPM: تعطيل event وتفعيل prefork
+RUN a2dismod mpm_event && a2enmod mpm_prefork
 
-ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+# تفعيل وحدة الـ PHP لـ Apache
+RUN a2enmod php8.2
 
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
-/etc/apache2/sites-available/*.conf
-
-COPY . /var/www/html
-
-RUN chown -R www-data:www-data /var/www/html
-
-# 🔥 سكربت تشغيل يحل المشكلة وقت runtime
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
-
-CMD ["/start.sh"]
+# أمر التشغيل (تأكد من أنه يطابق إعداداتك)
+CMD ["apache2-foreground"]
