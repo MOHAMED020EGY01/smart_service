@@ -12,13 +12,19 @@ class ProviderController extends Controller
     public function index()
     {
         $this->checkAuth();
-        $providers = User::isProvider()->with(['ProviderOrders','UserOrders'])->get();
+        $queryes = request()->query();
+        $providers = User::isProvider()->with(['ProviderOrders','UserOrders'])
+        ->when($queryes['category'], function($query) use ($queryes) {
+            return $query->where('category', $queryes['category']);
+        })->paginate(10)->withQueryString();
+
         return response()->json(
             [
                 "message" => "List of providers",
                 "data" => [
                     "providers" => new UserResourceCollection($providers),
-                ]
+                ],
+                "pagination" => $providers->linkCollection(),
             ],
             200
         );
