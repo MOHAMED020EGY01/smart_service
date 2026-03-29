@@ -14,7 +14,7 @@ class ProviderController extends Controller
         $this->checkAuth();
         $queryes = request()->query();
         $providers = User::isProvider()->with(['ProviderOrders','UserOrders'])
-        ->when($queryes['category'], function($query) use ($queryes) {
+        ->when(!empty($queryes['category']), function($query) use ($queryes) {
             return $query->where('category', $queryes['category']);
         })->paginate(10)->withQueryString();
 
