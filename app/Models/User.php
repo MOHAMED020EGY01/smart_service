@@ -32,9 +32,10 @@ class User extends Authenticatable
         'provider' => 'Provider',
     ];
     public const CATEGORY = [
-        'plumbing' => 'Plumbing',
-        'electrical' => 'Electrical',
-        'cleaning' => 'Cleaning',
+        'البرمجة' => 'البرمجة',
+        'البناء' => 'البناء',
+        'السباكة' => 'السباكة',
+        'الكهرباء' => 'الكهرباء',
     ];
     protected $hidden = [
         'password',
