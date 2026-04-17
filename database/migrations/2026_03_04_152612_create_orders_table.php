@@ -18,8 +18,9 @@ return new class extends Migration {
                 ->unsigned()
                 ->default(0)
                 ->check('rating BETWEEN 0 AND 5');
-
-            $table->enum('status', ['active', 'completed', 'cancelled'])->default('active');
+            $table->string('description');
+            $table->string('phone_user');
+            $table->enum('status', ['pending','active', 'completed', 'cancelled'])->default('active');
             $table->timestamps();
         });
     }
