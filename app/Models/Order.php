@@ -11,6 +11,8 @@ class Order extends Model
         'provider_id',
         'rating',
         'status',
+        'description',
+        'phone_user',
     ];
     //** Get the user that owns the order.
     public const STATUS = [

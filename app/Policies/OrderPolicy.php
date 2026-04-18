@@ -6,6 +6,9 @@ use App\Models\User;
 
 class OrderPolicy
 {
+    public function store(User $user){
+        return $user->role == "user";
+    }
     public function update(User $user, Order $order): bool
     {
         return $user->id === $order->user_id;

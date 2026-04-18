@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Events\OrderCreated;
 use App\Http\Requests\Order\RateProviderRequest;
 use App\Http\Requests\Order\UpdateOrderStatusRequest;
 use App\Http\Resources\OrderRresource;
@@ -11,10 +12,33 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
+
 class OrderController extends Controller
 {
+    public function index()
+    {
+        $user = Auth::user();
+        $orders = Order::where('user_id', '=', $user->id)
+            ->with(['user', 'provider'])
+            ->paginate(10)
+            ->withQueryString();
+
+        return response()->json(
+            [
+                "message" => "List of orders",
+                "data" => [
+                    "orders" => OrderRresource::collection($orders),
+                ],
+                "pagination" => $orders->linkCollection(),
+            ],
+            200
+        );
+    }
+
     public function store(Request $request, string $id): JsonResponse
     {
+        $this->authorize('store');
+
         $request->validate([
             'description' => ['required', 'string'],
             'phone_user' => ['required', 'string']
@@ -25,36 +49,20 @@ class OrderController extends Controller
             return response()->json(["status" => "error", "message" => "Provider not found"], 404);
         }
 
-        Order::create([
+        $order = Order::create([
             "user_id" => Auth::id(),
             "provider_id" => $provider->id,
-            "status" => "active",
-            'phone_user' => $request->phone,
+            "status" => "pending",
+            'phone_user' => $request->phone_user,
             'description' => $request->description
         ]);
+
+        OrderCreated::dispatch($order);
 
         return response()->json(["status" => "success", "message" => "Order created successfully"], 201);
     }
 
-    public function getOrders()
-    {
-        $user = Auth::user();
-        $orders = Order::where('user_id', '=', $user->id)
-            ->with(['user', 'provider'])
-            ->paginate(10)
-            ->withQueryString();
 
-        return response()->json(
-            [
-                "message" => "List of providers",
-                "data" => [
-                    "providers" => new OrderRresource($orders),
-                ],
-                "pagination" => $orders->linkCollection(),
-            ],
-            200
-        );
-    }
     public function updateStatus(UpdateOrderStatusRequest $request, Order $order): JsonResponse
     {
         $this->authorize('update', $order);

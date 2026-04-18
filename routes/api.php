@@ -1,5 +1,6 @@
 <?php
 
+use App\Events\OrderCreated;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
@@ -38,8 +39,10 @@ Route::group(
         Route::get('providers', [ProviderController::class, 'index']);
         Route::get('provider/{id}', [ProviderController::class, 'show']);
 
-        Route::get('order/store/{id}', [OrderController::class, 'store']);
+        Route::post('order/store/{id}', [OrderController::class, 'store']);
+        Route::get('orders',[OrderController::class,'index']);
         Route::put('order/update-status/{order}', [OrderController::class, 'updateStatus']);
         Route::post('order/rate/{provider}/{order}', [OrderController::class, 'rate']);
     }
 );
+
