@@ -6,8 +6,7 @@ use App\Http\Requests\Auth\loginRequest;
 use App\Http\Requests\Auth\registerRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
-use Google_Client;
-use GuzzleHttp\Client;
+use Google\Auth\OAuth2;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -91,21 +90,17 @@ class AuthController extends Controller
             'id_token' => ['required', 'string'],
             'role' => ['nullable', Rule::in(array_keys(User::ROLE))],
         ]);
-
-        $client = new Google_Client(['client_id' => config('services.google.client_id')]);
-
-        if (app()->environment('local')) {
-            $client->setHttpClient(new Client(['verify' => false]));
-        }
-
         try {
-            $payload = $client->verifyIdToken($request->id_token);
-            Log::info('Google token verification payload', ['payload' => $payload]);
+            $token = $request->id_token;
+
+            $payload = (new OAuth2([
+                'clientId' => config('services.google.client_id'),
+            ]))->verifyIdToken($token);
+
             if (!$payload || !isset($payload['email'])) {
-                Log::info('Google token verification failed', ['payload' => $payload]);
                 return response()->json([
                     'status' => false,
-                    'message' => 'Invalid Google token or insufficient scopes'
+                    'message' => 'Invalid Google token'
                 ], 401);
             }
 
@@ -120,7 +115,6 @@ class AuthController extends Controller
                 );
 
                 $token = $user->createToken('auth_token')->plainTextToken;
-                Log::info('Google authentication successful', ['user_id' => $user->id, 'email' => $user->email]);
                 return response()->json([
                     'status' => true,
                     'message' => 'Login successful',
