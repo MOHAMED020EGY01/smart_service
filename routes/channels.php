@@ -1,9 +1,12 @@
 <?php
 
-use App\Models\Order;
-use Illuminate\Support\Facades\Broadcast;
 
-Broadcast::channel('order.{orderId}', function ($user, $orderId) {
-    $order = Order::find($orderId);
-    $order && ($user->id === $order->user_id || $user->id === $order->provider_id);
-});
+// use Illuminate\Support\Facades\Broadcast;
+
+// Broadcast::channel('user.{id}', function ($user, $id) {
+//     return $user->id == $id && $user->role == "user";
+// });
+
+// Broadcast::channel('provider.{id}', function ($user, $id) {
+//     return $user->id == $id && $user->isProvider();
+// });

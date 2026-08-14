@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\OrderCreated;
+use App\Events\OrderUpdated;
 use App\Http\Requests\Order\RateProviderRequest;
 use App\Http\Requests\Order\UpdateOrderStatusRequest;
 use App\Http\Resources\OrderRresource;
@@ -18,10 +19,19 @@ class OrderController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $orders = Order::where('user_id', '=', $user->id)
-            ->with(['user', 'provider'])
-            ->paginate(10)
-            ->withQueryString();
+        if ($user->role == 'provider') {
+            $orders = Order::where('provider_id', '=', $user->id)
+                ->orderBy('updated_at', "desc")
+                ->with(['user', 'provider'])
+                ->paginate(10)
+                ->withQueryString();
+        } else {
+            $orders = Order::where('user_id', '=', $user->id)
+                ->orderBy('updated_at', "desc")
+                ->with(['user', 'provider'])
+                ->paginate(10)
+                ->withQueryString();
+        }
 
         return response()->json(
             [
@@ -37,7 +47,7 @@ class OrderController extends Controller
 
     public function store(Request $request, string $id): JsonResponse
     {
-        $this->authorize('store');
+        $this->authorize('store',new Order);
 
         $request->validate([
             'description' => ['required', 'string'],
@@ -57,9 +67,15 @@ class OrderController extends Controller
             'description' => $request->description
         ]);
 
-        OrderCreated::dispatch($order);
+        event(new OrderCreated($order));
 
-        return response()->json(["status" => "success", "message" => "Order created successfully"], 201);
+        return response()->json([
+            "status" => "success",
+            "message" => "Order created successfully",
+            "data" => [
+                "orders" => new OrderRresource($order),
+            ],
+        ], 201);
     }
 
 
@@ -69,7 +85,12 @@ class OrderController extends Controller
 
         $order->update(['status' => $request->status]);
 
-        return response()->json(["status" => "success", "message" => "Order status updated successfully"]);
+        event(new OrderUpdated($order));
+
+        return response()->json(["status" => "success",
+         "message" => "Order status updated successfully",
+         "data" => new OrderRresource($order),
+         ]);
     }
 
     public function rate(RateProviderRequest $request, User $provider, Order $order): JsonResponse

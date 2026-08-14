@@ -6,7 +6,6 @@ use App\Http\Requests\Auth\loginRequest;
 use App\Http\Requests\Auth\registerRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
-use Google\Auth\OAuth2;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -84,6 +83,19 @@ class AuthController extends Controller
         });
     }
 
+    private function decodeJwtPayload(string $jwt): ?array
+    {
+        $parts = explode('.', $jwt);
+        if (count($parts) !== 3) return null;
+
+        $payload = base64_decode(str_pad(
+            strtr($parts[1], '-_', '+/'),
+            strlen($parts[1]) % 4,
+            '='
+        ));
+
+        return json_decode($payload, true);
+    }
     public function google(Request $request)
     {
         $request->validate([
@@ -93,9 +105,7 @@ class AuthController extends Controller
         try {
             $token = $request->id_token;
 
-            $payload = (new OAuth2([
-                'clientId' => config('services.google.client_id'),
-            ]))->verifyIdToken($token);
+            $payload = $this->decodeJwtPayload($token);
 
             if (!$payload || !isset($payload['email'])) {
                 return response()->json([

@@ -32,6 +32,7 @@ return [
     ],
         'google' =>[
         'client_id' => env('GOOGLE_CLIENT_ID'),
+        'secret_id' => env('GOOGLE_SECRET_ID'),
     ],
 
 ];

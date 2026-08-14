@@ -11,7 +11,12 @@ class OrderPolicy
     }
     public function update(User $user, Order $order): bool
     {
-        return $user->id === $order->user_id;
+        $request = request();
+        if($request->status == "active"  || $request->status == "cancelled"){
+            return $user->id === $order->provider_id;
+        }else{
+            return $user->id === $order->user_id;
+        }
     }
 
     public function rate(User $user, Order $order): bool

@@ -2,6 +2,7 @@
 
 use App\Events\OrderCreated;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProviderController;
@@ -43,6 +44,10 @@ Route::group(
         Route::get('orders',[OrderController::class,'index']);
         Route::put('order/update-status/{order}', [OrderController::class, 'updateStatus']);
         Route::post('order/rate/{provider}/{order}', [OrderController::class, 'rate']);
+
+        Route::get('chats', [ChatController::class, 'index']);
+        Route::get('chat/{id}', [ChatController::class, 'show']);
+        Route::post('chat/{id}', [ChatController::class, 'store']);
     }
 );
 

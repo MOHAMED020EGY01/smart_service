@@ -8,7 +8,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Foundation\Events\Dispatchable;
 
-class OrderCreated implements ShouldBroadcastNow
+class OrderUpdated implements ShouldBroadcastNow
 {
     use Dispatchable, SerializesModels;
 
@@ -29,7 +29,7 @@ class OrderCreated implements ShouldBroadcastNow
 
     public function broadcastAs()
     {
-        return 'order.created';
+        return 'order.updated';
     }
     public function broadcastWith()
     {

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -51,9 +52,16 @@ class User extends Authenticatable
         ];
     }
     //* Scopes that should be cast to native types.
-    public function scopeIsProvider($query)
+    public function scopeIsProvider(Builder $query)
     {
         return $query->where('role', 'provider');
+    }
+    public function scopeChat(Builder $query,string $role)
+    {
+        if($role === 'provider'){
+            return $query->where('role', 'provider')->with('chat_user');
+        }
+        return $query->where('role', 'user')->with('chat_provider');
     }
 
 
@@ -79,5 +87,15 @@ class User extends Authenticatable
         }
         return $this->UserOrders();
     }
+
+    public function chat_user()
+    {
+        return $this->hasMany(Chat::class, 'user_id', 'id');
+    }
+    public function chat_provider()
+    {
+        return $this->hasMany(Chat::class, 'provider_id', 'id');
+    }
+
 
 }
