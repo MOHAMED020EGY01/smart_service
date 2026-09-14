@@ -12,16 +12,17 @@ return new class extends Migration {
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            $table->string('google_id')->nullable()->unique();
             $table->string('name');
             $table->enum('role', ['user', 'provider'])->default('user');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
-            
+
             $table->tinyInteger('rate')->nullable()
                 ->unsigned()
                 ->default(0)
                 ->check('rate BETWEEN 0 AND 5');
-            
+
             $table->string('password');
             $table->string('phone')->nullable();
             $table->string('category')->nullable();

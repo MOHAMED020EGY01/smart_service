@@ -41,4 +41,18 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
+    /**
+     * Indicate that the model is a provider.
+     */
+    public function provider(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'provider',
+            'category' => fake()->randomElement(array_keys(\App\Models\User::CATEGORY)),
+            'experiences' => fake()->sentence(),
+            'rate' => fake()->numberBetween(1, 5),
+            'phone' => fake()->phoneNumber(),
+        ]);
+    }
 }

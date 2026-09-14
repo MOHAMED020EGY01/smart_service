@@ -6,6 +6,7 @@ use App\Http\Requests\Auth\loginRequest;
 use App\Http\Requests\Auth\registerRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use Google\Auth\AccessToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Laravel\Sanctum\PersonalAccessToken;
-
+use Google\Client as GoogleClient;
 
 class AuthController extends Controller
 {
@@ -83,48 +84,138 @@ class AuthController extends Controller
         });
     }
 
-    private function decodeJwtPayload(string $jwt): ?array
-    {
-        $parts = explode('.', $jwt);
-        if (count($parts) !== 3) return null;
 
-        $payload = base64_decode(str_pad(
-            strtr($parts[1], '-_', '+/'),
-            strlen($parts[1]) % 4,
-            '='
-        ));
-
-        return json_decode($payload, true);
-    }
     public function google(Request $request)
     {
         $request->validate([
             'id_token' => ['required', 'string'],
-            'role' => ['nullable', Rule::in(array_keys(User::ROLE))],
+        ]);
+        Log::info('Google Authentication Request', [
+            'id_token' => $request->input('id_token'),
         ]);
         try {
-            $token = $request->id_token;
+            $googleClient = new GoogleClient([
+                'client_id' => config('services.google.client_id'),
+            ]);
 
-            $payload = $this->decodeJwtPayload($token);
+            /*
+             * Verify Google ID Token
+             *
+             * This checks the token signature and validates it against
+             * the configured Google Client ID.
+             */
 
-            if (!$payload || !isset($payload['email'])) {
+            Log::info('Verifying Google ID Token', [
+                'googleClient' => $googleClient,
+            ]);
+            $payload = $googleClient->verifyIdToken(
+                $request->input('id_token')
+            );
+            if (!$payload) {
+                Log::warning('Google Authentication Warning', [
+                    'message' => 'Invalid Google token',
+                ]);
                 return response()->json([
                     'status' => false,
-                    'message' => 'Invalid Google token'
+                    'message' => 'Invalid Google token',
                 ], 401);
             }
 
-            return DB::transaction(function () use ($payload, $request) {
-                $user = User::firstOrCreate(
-                    ['email' => $payload['email']],
-                    [
-                        'name' => $payload['name'] ?? 'Google User',
-                        'password' => Hash::make(Str::random(16)),
-                        'role' => $request->input('role', User::ROLE['user']),
-                    ]
-                );
+            /*
+             * Required Google claims
+             */
+            if (
+                empty($payload['sub']) ||
+                empty($payload['email']) ||
+                ($payload['email_verified'] ?? false) !== true
+            ) {
+                Log::warning('Google Authentication Warning', [
+                    'message' => 'Invalid Google account data',
+                    'payload' => $payload,
+                ]);
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid Google account data',
+                ], 401);
+            }
 
-                $token = $user->createToken('auth_token')->plainTextToken;
+            /*
+             * Optional issuer validation
+             */
+            $validIssuers = [
+                'https://accounts.google.com',
+                'accounts.google.com',
+            ];
+
+            if (
+                empty($payload['iss']) ||
+                !in_array($payload['iss'], $validIssuers, true)
+            ) {
+                Log::warning('Google Authentication Warning', [
+                    'message' => 'Invalid Google token issuer',
+                    'issuer' => $payload['iss'] ?? null,
+                ]);
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid Google token issuer',
+                ], 401);
+            }
+
+            return DB::transaction(function () use ($payload) {
+
+                /*
+                 * Google "sub" is the stable unique identifier
+                 * for the Google account.
+                 */
+                $googleId = $payload['sub'];
+                Log::info('Google Authentication Payload', [
+                    'google_id' => $googleId,
+                    'email' => $payload['email'],
+                    'name' => $payload['name'] ?? null,
+                ]);
+                $user = User::where('google_id', $googleId)
+                    ->orWhere('email', $payload['email'])
+                    ->first();
+
+                if (!$user) {
+                    $user = User::create([
+                        'google_id' => $googleId,
+                        'email' => $payload['email'],
+                        'name' => $payload['name'] ?? 'Google User',
+                        'password' => Hash::make(Str::random(32)),
+                        'role' => User::ROLE['user'],
+                    ]);
+                } else {
+                    /*
+                     * Link Google account if the user already exists
+                     * by email but has no google_id.
+                     */
+                    if (empty($user->google_id)) {
+                        $user->update([
+                            'google_id' => $googleId,
+                        ]);
+                    }
+
+                    /*
+                     * Optional: update profile data from Google.
+                     */
+                    if (
+                        !empty($payload['name']) &&
+                        $user->name !== $payload['name']
+                    ) {
+                        $user->update([
+                            'name' => $payload['name'],
+                        ]);
+                    }
+                }
+
+                /*
+                 * Create Laravel Sanctum token
+                 */
+                $token = $user
+                    ->createToken('auth_token')
+                    ->plainTextToken;
+
                 return response()->json([
                     'status' => true,
                     'message' => 'Login successful',
@@ -132,16 +223,21 @@ class AuthController extends Controller
                         'user' => UserResource::make($user),
                         'access_token' => $token,
                         'token_type' => 'Bearer',
-                    ]
+                    ],
                 ]);
             });
-        } catch (\Exception $e) {
-            Log::error('Google Auth Error: ' . $e->getMessage());
+
+        } catch (\Throwable $e) {
+
+            Log::error('Google Authentication Error', [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+            ]);
 
             return response()->json([
                 'status' => false,
-                'message' => 'Authentication failed'
-            ], 500);
+                'message' => 'Authentication failed',
+            ], 401);
         }
     }
 
@@ -149,7 +245,10 @@ class AuthController extends Controller
     {
         $user = Auth::user();
         if ($user) {
-            $user->currentAccessToken()->delete();
+            $token = $user->currentAccessToken();
+            if ($token instanceof PersonalAccessToken) {
+                PersonalAccessToken::whereKey($token->getKey())->delete();
+            }
             return response()->json([
                 'status' => true,
                 'message' => 'User logged out successfully',
